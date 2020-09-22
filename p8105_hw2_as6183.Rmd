@@ -1,0 +1,28 @@
+---
+title: "p8105_hw2_as6183"
+output: github_document
+---
+# Problem 1
+```{r message=F}
+library(readxl)
+setwd("C:/Users/13038/Downloads")
+Trash_Wheel = read_excel("Trash-Wheel-Collection-Totals-8-6-19.xlsx")
+Trash_Wheel = Trash_Wheel[na.omit(Trash_Wheel$Dumpster),]
+Trash_Wheel$`Sports Balls`=round(Trash_Wheel$`Sports Balls`)
+Trash_Wheel$`Sports Balls`=as.integer(Trash_Wheel$`Sports Balls`)
+Precip_2017 = read_excel("Trash-Wheel-Collection-Totals-8-6-19.xlsx",skip=1,sheet=6)
+Precip_2018 = read_excel("Trash-Wheel-Collection-Totals-8-6-19.xlsx",skip=1,sheet=5)
+Precip_2017 = Precip_2017[-13,]
+Precip_2018 = Precip_2018[-13,]
+Precip_2017$Year = rep(2017,12)
+Precip_2018$Year = rep(2018,12)
+Precip_Combined = rbind(Precip_2017,Precip_2018)
+Precip_Combined$Month = as.character(Precip_Combined$Month)
+Precip_Combined$Month = rep(month.name,2)
+library(dplyr)
+colnames(Trash_Wheel)[13] = "Sports_Balls" 
+```
+
+For the Mr. Trash Wheel Data set there were `r nrow(Trash_Wheel)` observations and `r ncol(Trash_Wheel)` variables. For the combined precipitation data set there were `r nrow(Precip_Combined)` observations and `r ncol(Precip_Combined)` variables. Some key variables in the Mr. Trash Wheel data set are the Dumpster number, Month, Year, and Weight of trash collected in tons. For the available observations, the total precipitation for 2018 was `r sum(Precip_Combined$Total[seq(13:24)])` inches and the median number of sport balls in 2017 was `r Trash_Wheel%>%subset(Year==2017)%>%select(Sports_Balls)%>%unlist%>%median()`. 
+
+# Problem 2
