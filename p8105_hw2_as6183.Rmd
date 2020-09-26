@@ -37,7 +37,17 @@ This data set is data on Subway Stations and includes information such as statio
 
 There are `r nrow(distinct(Subway_Data))` distinct stations in this dataset. There are also `r distinct(Subway_Data)%>%filter(ADA==T)%>%nrow()` ADA compliant stations in the dataset. The proportion of stations that allow entry even though they do not have vending is `r distinct(Subway_Data)%>%filter(Vending=="NO"&Entry==T)%>%nrow()/684`.
 
-Of the stations that serve the A train, `r distinct(Subway_Data)%>%filter(Route1=="A"&ADA==T)%>%nrow()` are ADA compliant. 
+```{r}
+library(tidyr)
+distinct_data = distinct(Subway_Data)
+Subway_Data = Subway_Data%>%
+  mutate_if(is.integer,as.character)
+Subway_Data = pivot_longer(Subway_Data,Route1:Route11,names_to="Route Name",values_to="Route Number")
+head(Subway_Data[,c("Line","Station.Name","Route Name","Route Number")])
+```
+From the head of the Subway Data data frame above, it can now be seen that route name and route number are distinct variables.
+
+Of the stations that serve the A train, `r distinct_data%>%filter(Route1=="A"&ADA==T)%>%nrow()` are ADA compliant. 
 
 # Problem 3
 ```{r}
@@ -45,8 +55,7 @@ setwd("C:/Users/13038/Downloads/p8105_hw2_as6183_data")
 pols = read.csv("pols-month.csv")
 unemployment = read.csv("unemployment.csv")
 snp = read.csv("snp.csv")
-library(tidyr)
-pols = pols=separate(pols,col="mon",into=c("year","month","day"),sep="-")
+pols = separate(pols,col="mon",into=c("year","month","day"),sep="-")
 pols$year = as.integer(pols$year)
 pols$day = as.integer(pols$day)
 pols$month[seq(1,816)] = rep(month.name,68)
