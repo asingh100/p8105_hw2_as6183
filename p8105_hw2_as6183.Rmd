@@ -5,75 +5,96 @@ output: github_document
 # Problem 1
 ```{r message=F}
 library(readxl)
-setwd("C:/Users/13038/Downloads/p8105_hw2_as6183_data")
-Trash_Wheel = read_excel("Trash-Wheel-Collection-Totals-8-6-19.xlsx")
-Trash_Wheel = Trash_Wheel[na.omit(Trash_Wheel$Dumpster),]
-Trash_Wheel$`Sports Balls`=round(Trash_Wheel$`Sports Balls`)
-Trash_Wheel$`Sports Balls`=as.integer(Trash_Wheel$`Sports Balls`)
-Precip_2017 = read_excel("Trash-Wheel-Collection-Totals-8-6-19.xlsx",skip=1,sheet=6)
-Precip_2018 = read_excel("Trash-Wheel-Collection-Totals-8-6-19.xlsx",skip=1,sheet=5)
-Precip_2017 = Precip_2017[-13,]
-Precip_2018 = Precip_2018[-13,]
-Precip_2017$Year = rep(2017,12)
-Precip_2018$Year = rep(2018,12)
-Precip_Combined = rbind(Precip_2017,Precip_2018)
-Precip_Combined$Month = as.character(Precip_Combined$Month)
-Precip_Combined$Month = rep(month.name,2)
 library(dplyr)
+library(tidyverse)
+setwd("C:/Users/13038/Downloads/p8105_hw2_as6183_data")
+Trash_Wheel = read_excel("Trash-Wheel-Collection-Totals-8-6-19.xlsx") #Trash_Wheel variable name based on name of data set
+Trash_Wheel = drop_na(Trash_Wheel,Dumpster)
+Trash_Wheel = Trash_Wheel%>%
+  mutate(`Sports Balls`=round(`Sports Balls`))%>%
+  mutate(`Sports Balls`=as.integer(`Sports Balls`))
+Precip_2017 = read_excel("Trash-Wheel-Collection-Totals-8-6-19.xlsx",skip=1,sheet=6) #Variable name chosen because this is the precipitation for 2017
+Precip_2018 = read_excel("Trash-Wheel-Collection-Totals-8-6-19.xlsx",skip=1,sheet=5)#Variable name chosen because this data shows the precipitation for 2018
+Precip_2017 = drop_na(Precip_2017,Month)
+Precip_2018 = drop_na(Precip_2018,Month)
+Precip_2017 = Precip_2017%>%
+  mutate(Year = rep(2017,12))
+Precip_2018 = Precip_2018%>%
+  mutate(Year = rep(2018,12))
+Precip_Combined = rbind(Precip_2017,Precip_2018) #Variable name chosen because this data set combines the precipitation for 2017 and 2018
+Precip_Combined = Precip_Combined%>%
+  mutate(Month = as.character(Month))%>%
+  mutate(Month = rep(month.name,2))
 colnames(Trash_Wheel)[13] = "Sports_Balls" 
 ```
 
-For the Mr. Trash Wheel Data set there were `r nrow(Trash_Wheel)` observations and `r ncol(Trash_Wheel)` variables. For the combined precipitation data set there were `r nrow(Precip_Combined)` observations and `r ncol(Precip_Combined)` variables. Some key variables in the Mr. Trash Wheel data set are the Dumpster number, Month, Year, and Weight of trash collected in tons. For the available observations, the total precipitation for 2018 was `r sum(Precip_Combined$Total[seq(13:24)])` inches and the median number of sport balls in 2017 was `r Trash_Wheel%>%subset(Year==2017)%>%select(Sports_Balls)%>%unlist%>%median()`. 
+For the Mr. Trash Wheel Data set there were `r nrow(Trash_Wheel)` observations and `r ncol(Trash_Wheel)` variables. For the combined precipitation data set there were `r nrow(Precip_Combined)` observations and `r ncol(Precip_Combined)` variables. Some key variables in the Mr. Trash Wheel data set are the Dumpster number, Month, Year, and Weight of trash collected in tons. For the available observations, the total precipitation for 2018 was `r Precip_Combined%>%filter(Year==2018)%>%select(Total)%>%sum()` inches and the median number of sport balls in 2017 was `r Trash_Wheel%>%subset(Year==2017)%>%select(Sports_Balls)%>%unlist%>%median()`.
 
 # Problem 2
 ```{r}
 setwd("C:/Users/13038/Downloads/p8105_hw2_as6183_data")
-Subway_Data= read.csv("NYC_Transit_Subway_Entrance_And_Exit_Data.csv")
+Subway_Data= read.csv("NYC_Transit_Subway_Entrance_And_Exit_Data.csv") #Named variable Subway_Data because the data set contains data on Subway Stations in NYC
 Subway_Data = select(Subway_Data,c(seq(2,18),20,23))
-Subway_Data$Entry = recode(Subway_Data$Entry,YES = T, NO = F)
+Subway_Data = Subway_Data%>%
+  mutate(Entry = recode(Entry,YES = T, NO = F))
 ```
 
-This data set is data on Subway Stations and includes information such as station's name, station's line, station's latitude, station's longitude, routes that the station serves, entrance type of the station, whether the station's entry is allowed or not (T/F), whether there is vending in the station or not(YES/NO), and whether the station is ADA compliant or not (T/F). Some data cleaning steps that I have taken so far are removing any uneccesary columns that I won't need in my analysis as well as recoding the entry variable from being a YES/NO variable to being a True or False variable. There are 1868 rows and 19 columns in the data frame as of now. The data is not completely tidy yet as there are still many duplicate rows that contain the same information in the data set. 
-
-There are `r nrow(distinct(Subway_Data))` distinct stations in this dataset. There are also `r distinct(Subway_Data)%>%filter(ADA==T)%>%nrow()` ADA compliant stations in the dataset. The proportion of stations that allow entry even though they do not have vending is `r distinct(Subway_Data)%>%filter(Vending=="NO"&Entry==T)%>%nrow()/684`.
+This data set is data on Subway Stations and includes information such as station's name, station's line, station's latitude, station's longitude, routes that the station serves, entrance type of the station, whether the station's entry is allowed or not (T/F), whether there is vending in the station or not (YES/NO), and whether the station is ADA compliant or not (T/F). Some data cleaning steps that I have taken so far are removing any uneccesary columns that I won't need in my analysis as well as recoding the entry variable from being a YES/NO variable to being a True or False variable. There are `r nrow(Subway_Data)` rows and `r ncol(Subway_Data)` columns in the data frame as of now. The data is not completely tidy yet as there are still many duplicate rows that contain the same information in the data set. 
+```{r}
+distinct_stations = distinct(Subway_Data) #named variable this because it contains data on all the distinct Subway Stations with no repeating stations in it
+ADA_Compliant = distinct_stations%>%  
+  filter(ADA==T)%>%
+  nrow()  #named variable ADA_Compliant because it shows how many ADA Compliant stations there are 
+Entry_No_Vending = distinct_stations%>%
+  filter(Vending=="NO"&Entry==T)%>%
+  nrow()/684  #named variable Entry_No_Vending because it shows how many stations allow entry without vending
+```
+There are `r nrow(distinct_stations)` distinct stations in this dataset. There are also `r ADA_Compliant` ADA compliant stations in the dataset. The proportion of stations that allow entry even though they do not have vending is `r Entry_No_Vending`.
 
 ```{r}
-library(tidyr)
-distinct_data = distinct(Subway_Data)
 Subway_Data = Subway_Data%>%
   mutate_if(is.integer,as.character)
 Subway_Data = pivot_longer(Subway_Data,Route1:Route11,names_to="Route Name",values_to="Route Number")
-head(Subway_Data[,c("Line","Station.Name","Route Name","Route Number")])
+head(select(Subway_Data,c("Line","Station.Name","Route Name","Route Number")))
+ADA_Compliant_A_Line = distinct_stations%>%
+  filter(Route1=="A"&ADA==T)%>%
+  nrow()  #named variable ADA_Compliant_A_Line because this variable shows how many A Line stations are ADA Compliant
 ```
 From the head of the Subway Data data frame above, it can now be seen that route name and route number are distinct variables.
 
-Of the stations that serve the A train, `r distinct_data%>%filter(Route1=="A"&ADA==T)%>%nrow()` are ADA compliant. 
+Of the stations that serve the A train, `r ADA_Compliant_A_Line` are ADA compliant. 
 
 # Problem 3
 ```{r}
 setwd("C:/Users/13038/Downloads/p8105_hw2_as6183_data")
-pols = read.csv("pols-month.csv")
-unemployment = read.csv("unemployment.csv")
-snp = read.csv("snp.csv")
+pols = read.csv("pols-month.csv") #named variable this since file name was pols-month.csv
+unemployment = read.csv("unemployment.csv") #named variable this since data set gives information about unemployment data
+snp = read.csv("snp.csv") #named variable this since file was named snp.csv
 pols = separate(pols,col="mon",into=c("year","month","day"),sep="-")
-pols$year = as.integer(pols$year)
-pols$day = as.integer(pols$day)
-pols$month[seq(1,816)] = rep(month.name,68)
-pols$month[seq(817,822)] = month.name[seq(1,6)]
-pols$president = ifelse(pols$prez_dem==1,"dem","gop")
+pols= pols %>% 
+  mutate(year = as.integer(year),day=as.integer(day))
+pols = pols%>%
+  mutate(month=replace(month,seq(1,816),month.name))
+pols = pols%>%
+  mutate(month=replace(month,seq(817,822),month.name[seq(1,6)]))
+pols = pols%>%
+  mutate(president= ifelse(pols$prez_dem==1,"dem","gop"))
 pols = select(pols,-c("prez_dem","prez_gop","day"))
 snp = separate(snp,col="date",into=c("month","day","year"),sep="/")
-snp$year = as.integer(snp$year)
-snp$day = as.integer(snp$day)
-snp$month[seq(1,7)] = month.name[seq(7,1,-1)]
-snp$month[seq(8,787)] = rep(month.name[seq(12,1,-1)],65)
+snp= snp %>% 
+  mutate(year = as.integer(year),day=as.integer(day))
+snp = snp%>%
+  mutate(month=replace(month,seq(1,7),month.name[seq(7,1,-1)]))
+snp = snp%>%
+  mutate(month=replace(month,seq(8,787),month.name[seq(12,1,-1)]))
 snp = select(snp,c("year","month",-"day","close"))
 colnames(unemployment)[seq(2,13)] = month.name
-unemployment$Year = factor(unemployment$Year)
-unemployment<- gather(unemployment,month,Unemployment_Rate, January:December, factor_key=TRUE)
+unemployment = unemployment %>% 
+  mutate(Year = as.factor(Year))
+unemployment = gather(unemployment,month,Unemployment_Rate, January:December, factor_key=TRUE)
 colnames(unemployment)[1] = "year"
-combined_1 = merge(pols,snp,by=c("year","month"))
-combined_final = merge(combined_1,unemployment,by=c("year","month"))
+combined_1 = merge(pols,snp,by=c("year","month")) #named variable this since it is an intermediary combined data frame, thus combined_1
+combined_final = merge(combined_1,unemployment,by=c("year","month")) #named variable this since it is the final combined data frame containing all three data sets we needed to combine
 ```
 
 For the original data sets, the "pols-month" data set contained 822 observations and 9 variables that gave information on the number of national politicians who are democratic or republican at any time. The "snp" data set contained 787 observations of 2 variables that gave information about the Standard and Poor's stock market index which is generally used as a measure of the stock market as a whole. The "unemployment" data set contained 68 observations of 13 variables which gave information about the unemployment rate for certain time periods which are in months and years. The resulting data set after combining all three of these data sets contains `r nrow(combined_final)` rows and `r ncol(combined_final)` columns. This combined data set also contains information from a range of `r max(combined_final$year)-min(combined_final$year)` years. Some key variables are year, month, Unemployment_Rate, president, and close which gives information on the year, month, rate of unemployment, whether the president is democratic or republican, and the closing value of the S&P index at that particular month and year respectively.
